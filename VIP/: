@@ -1,0 +1,60 @@
+import numpy as np
+import netCDF4 as nc
+import datetime as dt
+import matplotlib.pyplot as plt
+import matplotlib.dates as pltd
+
+def convert_time(times):
+     #ref = dt.datetime(1900,1,3,2,0,0)
+     ref = dt.datetime(1900,1,1,0,0,0)
+     date = np.zeros(len(times))
+     for nt in range(len(times)):
+        newdate = ref + dt.timedelta(seconds=times[nt])
+        date[nt] = pltd.date2num(newdate)
+     return date
+
+def get_hourly_times(start_date,ndata):
+    ref = start_date
+    date = []
+    for nt in range(ndata):
+        date.append(pltd.date2num(ref + dt.timedelta(hours=nt))) # + dt.timedelta(hours=12)))
+
+    return date
+
+sta_fil ='/t1/scratch/liz/tmpdir_VIP-LD.HCo13T/VIP-LD.HCo13T_sta.nc'
+fid = nc.Dataset(sta_fil)
+vip_ssh = fid.variables['zeta'][::4,14]
+vip_ssh = vip_ssh - np.mean(vip_ssh)
+vip_time = fid.variables['ocean_time'][::4]
+plt_vip_dates = convert_time(vip_time)
+
+
+
+tid_fil = '/data/external/P1/Data/tide_gauge/Manila/h370a95.dat'
+arr_tmp=np.loadtxt(tid_fil,skiprows=489,usecols=(3,4,5,6,7,8,9,10,11,12,13,14))
+arr = arr_tmp.flatten()
+arr = np.ma.masked_where(arr > 9000,arr)
+tid_mean = np.mean(arr)
+arr_norm_m = (arr - tid_mean)/1000.
+plt_dates = get_hourly_times(dt.datetime(1995,9,2,0,0,0),len(arr_norm_m))
+
+#start_man = 60
+#R_val = np.ma.corrcoef(arr_norm_m[start_man:start_man+len(vip_ssh[36:])],vip_ssh[36:])
+#print R_val[0,-1]
+
+print len(vip_ssh)
+print len(arr_norm_m[12:12+len(vip_ssh)])
+
+R_val = np.ma.corrcoef(arr_norm_m[12:12+len(vip_ssh)],vip_ssh)
+print R_val[0,-1]
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot(plt_dates,arr_norm_m,'-r')
+ax.plot(plt_vip_dates,vip_ssh, '-b')
+#ax.plot(plt_dates[60:],arr_norm_m[60:],'-r')
+#ax.plot(plt_vip_dates[36:],vip_ssh[36:], '-b')
+ax.xaxis_date()
+plt.show()
+
+

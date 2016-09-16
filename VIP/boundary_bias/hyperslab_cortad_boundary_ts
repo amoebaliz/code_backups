@@ -1,0 +1,10 @@
+#!/bin/bash
+DIR=/t3/workdir/liz/scripts/VIP_analyses/Interpolations/CORTAD_to_VIP_remap/
+infil=${DIR}remapped_CORTADv4_FilledSST_to_VIP.nc
+
+ncks -O -d eta_rho,0,246 -d xi_rho,0 $infil cortad_VIPbound_sst_ts_A.nc
+ncks -O -d eta_rho,0 -d xi_rho,0,360 $infil cortad_VIPbound_sst_ts_B.nc
+ncks -O -d eta_rho,0 -d xi_rho,520,601 $infil cortad_VIPbound_sst_ts_C1.nc
+ncks -O -d eta_rho,0,130 -d xi_rho,601 $infil cortad_VIPbound_sst_ts_C2.nc
+ncks -O -d eta_rho,150,320 -d xi_rho,601 $infil cortad_VIPbound_sst_ts_D.nc
+

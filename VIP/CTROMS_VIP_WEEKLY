@@ -1,0 +1,19 @@
+#!/bin/bash
+DIR=/t3/workdir/liz/scripts/VIP_analyses/
+fname=${DIR}'VIP_sst_1996-1999.nc'
+outfil=${DIR}'VIP_weekly_sst_1996-1999.nc'
+
+n=1
+ind1=5; ind2=11
+
+while (($n < 209)); do
+      week_val=$(printf %03d $n)
+      tempfil=${DIR}temp_$week_val.nc 
+      echo $tempfil
+      ncra -O -d ocean_time,$ind1,$ind2 $fname $tempfil 
+      ((ind1+=7)); ((ind2+=7)); ((n+=1)) 
+done
+
+ncrcat -O  ${DIR}temp*.nc $outfil
+rm ${DIR}temp*.nc
+echo 'done'

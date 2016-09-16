@@ -1,0 +1,17 @@
+#!/bin/bash
+fname=ct_VIPbound_sst_ts_D.nc
+outfil=ct_VIPbound_sst_WEEKLY_ts_D.nc
+
+n=1
+ind1=0; ind2=6
+
+while (($n < 1357)); do
+      week_val=$(printf %04d $n)
+      tempfil=temp_$week_val.nc 
+      ncra -O -d ocean_time,$ind1,$ind2 $fname $tempfil 
+      ((ind1+=7)); ((ind2+=7)); ((n+=1)) 
+done
+
+ncrcat -O temp* $outfil
+rm temp*
+echo 'done'

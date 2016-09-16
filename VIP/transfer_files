@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Transfer VIP Model Files
+nice -10 rsync -av -r /Volumes/P6/ROMS/VIP/VIP-LD.HCo13T/*  /Volumes/Pacific/Models/VIP/VIP-LD.HCo13T/
+
+# Transfer Malin Model Files
+nice -10 rsync -av -r /Volumes/P6/ROMS/MaPhil/MaPhil-LD.HCo05T/*  /Volumes/Pacific/Models/MAPHIL/MaPhil-LD.HCo05T/
+

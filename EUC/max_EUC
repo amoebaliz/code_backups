@@ -1,0 +1,134 @@
+# find the max EUC velocity at each time point to construct time series
+#######################################################################
+
+
+# import the necessary packages
+import netCDF4 as nc
+import numpy as np 
+import matplotlib.pylab as plt
+import datetime as dt
+import calendar as cal
+import trend_stat
+
+########### Callable functions ######################
+def addmonth(t_ref,n):
+	# deconstruct t_ref
+        year0 = t_ref[0]
+        month0 = t_ref[1]
+        day0 = t_ref[2]
+
+	# determinte # years
+        year1 = year0 + n//12
+        month1 = (month0-1) + n%12
+        if month1 > 12:
+                year1 = year1 + 1
+                month1 = month1 - 12
+	
+	# days for decimal months
+        deci_month = month1 % 1
+        if deci_month == 0:
+                day1=day0
+        else:
+       		# look up number of days in that month
+       		month1 = np.ceil(month1)   # ceil b/c get 0 months otherwise
+		ndays = cal.monthrange(int(year1),int(month1))[1]		
+	        day1 = np.ceil(deci_month * ndays)
+		t_n = dt.date(int(year1),int(month1),int(day1))
+	return t_n
+#######################################################
+
+# asign ID to the .nc file
+fid = nc.Dataset('u_eqpac_SODA_extended.nc','r')
+
+# get the variables from this file: zonal velocty, time, lat/lon
+u = fid.variables['u'][:]
+time = fid.variables['time'][:]
+lat = fid.variables['lat'][:]
+lon = fid.variables['lon'][:]
+depth = fid.variables['depth'][:]
+
+# get attribute info for time
+timeid = fid.variables['time']
+time_unit = getattr(timeid,'units')
+
+# close the .nc file
+fid.close()
+
+# length of time index
+nt = len(time)
+
+# the time index is all values along the time dimension
+itime = np.arange(0,nt)
+
+# parse out the start date point
+year0 = int(time_unit[13:17])
+month0 = int(time_unit[18:20])
+day0 = int(time_unit[21:23])
+
+t_ref = [year0, month0, day0]
+date_vals = [addmonth(t_ref,T) for T in time]
+
+# identify spatial indices for Pacific region of interest
+idep = ((depth> 10) & (depth<300)).nonzero()
+idep = [item for sublist in idep for item in sublist]
+sdep = depth[idep]
+
+ilat = ((lat> -2)& (lat<2)).nonzero()
+ilat = [item for sublist in ilat for item in sublist]
+slat = lat[ilat]
+
+ilon = ((lon> 210) & (lon<260)).nonzero()
+ilon = [item for sublist in ilon for item in sublist]
+slon = lon[ilon]
+
+# get the lengths for the spatial indices
+ndep = len(sdep)
+nlat = len(slat)
+nlon = len(slon)
+
+# the time index is all values along the time dimension
+itime = np.arange(0,nt)
+
+# Remove missing values from u
+u[u<-10000] = float('NaN')
+
+#broadcast the index variables so that they are the shape of the final array
+#NOTE: numpy.ix_should achive this with just the 1D index arrays
+ixgrid = np.ix_(itime, idep, ilat, ilon)
+
+# generate array of just zonal velocities of interest
+u_eq = u[ixgrid]
+
+#u_eq = u[:,idep[0]:idep[-1]+1,ilat[0]:ilat[-1]+1,ilon[0]:ilon[-1]+1]
+## NOTE: the above solution works... but there should be a cleaner method
+
+# obtain the maximum zonal velocity along the time axis
+max_u =np.amax(np.amax(np.amax(u_eq, axis = 3), axis = 2), axis = 1)
+
+#### CALCULATE THE Filter values/ trends
+# How to make external functions to call
+print max_u.shape
+
+trend_stat.trend_stat(max_u)
+
+
+
+# plot the max_u against time (figure out how to plot dates on the x-axis) 
+plt.figure()
+plt.plot(date_vals,max_u)
+plt.ylim(0,2)
+plt.xticks([dt.date(1870,07,01),dt.date(1905,07,01),dt.date(1940,07,01),dt.date(1975,07,01),dt.date(2010,07,01)])
+plt.yticks([0,0.4,0.8,1.2,1.6,2.0])
+
+plt.title('Maximum EUC Zonal Velocity', fontsize=16)
+
+plt.xlabel('Time (years)',fontsize=14)
+plt.ylabel('Zonal Velocity (ms$^{-1}$)',fontsize=14)
+
+
+
+plt.show() 
+
+
+
+ 

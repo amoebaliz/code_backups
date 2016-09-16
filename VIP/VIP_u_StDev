@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# UNBIASED STANDARD DEVIATION = SQRT( (N/N-1) * (AVG(x^2)-(AVG(X))^2) )
+
+# THIS SCRIPT CAN TAKE A LONG TIME BUT WILL NOT RUN OUT OF MEMORY 
+# ALLOCATION AS QUICKLY AS NCO SUGGESTED METHOD
+
+# ---------------------------------------------------------------------
+# CALCULATE AVG(x^2)
+#ncra -y avgsqr -v u /t3/workdir/liz/MODELS/VIP/Runs/VIP-LD.HCo11T/1996/VIP-LD.HCo11T_avg_1996-* /t3/workdir/liz/MODELS/VIP/Runs/VIP-LD.HCo11T/1997/VIP-LD.HCo11T_avg_1997-* /t3/workdir/liz/MODELS/VIP/Runs/VIP-LD.HCo11T/1998/VIP-LD.HCo11T_avg_1998-* /t3/workdir/liz/MODELS/VIP/Runs/VIP-LD.HCo11T/1999/VIP-LD.HCo11T_avg_1999-* /t3/workdir/liz/MODELS/VIP/PostProc/VIP_average_u2_96-99.nc
+
+# CALCULATE (AVG(x))
+#ncra -y sqravg -v u /t3/workdir/liz/MODELS/VIP/Runs/VIP-LD.HCo11T/1996/VIP-LD.HCo11T_avg_1996-* /t3/workdir/liz/MODELS/VIP/Runs/VIP-LD.HCo11T/1997/VIP-LD.HCo11T_avg_1997-* /t3/workdir/liz/MODELS/VIP/Runs/VIP-LD.HCo11T/1998/VIP-LD.HCo11T_avg_1998-* /t3/workdir/liz/MODELS/VIP/Runs/VIP-LD.HCo11T/1999/VIP-LD.HCo11T_avg_1999-* VIP_u_average2_96-99.nc
+
+# cd /t3/workdir/liz/MODELS/VIP/PostProc
+
+# CALCULATE N/(N-1)
+#frac_val= bc -l <<<'(365*4+1)/(365*4)'
+#neg_frac_val= bc -l <<<'-1*(365*4+1)/(365*4)'
+
+# CALCULATE DIFFERENCE
+# NOTE: core dumps when converting to float point
+#ncflint -w $frac_val,$neg_frac_val -v u VIP_average_u2_9699.nc VIP_u_average2_9699.nc frac_average_u2mu_average2.nc
+ncflint -O -w 1,-1 /t3/workdir/liz/MODELS/VIP/PostProc/VIP_average_u2_9699.nc /t3/workdir/liz/MODELS/VIP/PostProc/VIP_u_average2_9699.nc /t3/workdir/liz/MODELS/VIP/PostProc/average_u2mu_average2.nc
+
+# CALCULATE SQUARE ROOT
+#ncra -O -y sqrt frac_average_u2mu_average2.nc VIP_u_stdev_9699.nc
+ncra -O -y sqrt /t3/workdir/liz/MODELS/VIP/PostProc/average_u2mu_average2.nc /t3/workdir/liz/MODELS/VIP/PostProc/VIP_biased_u_var_9699.nc
+
+# FILE CLEAN UP
+#rm frac_average_u2mu_average2.nc
+rm /t3/workdir/liz/MODELS/VIP/PostProc/average_u2mu_average2.nc
+#rm VIP_average_u2_96-99.nc
+#rm VIP_u_average2_96-99.nc

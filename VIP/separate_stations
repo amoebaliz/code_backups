@@ -1,0 +1,12 @@
+#!/bin/bash
+
+infil=VIP-LD.HCo10T_sta.nc
+
+for nsta in {17..26}  ; do 
+    nsta_tit=`printf "%02d" $((nsta+1))`
+    outfil=VIP_station_$nsta_tit.nc 
+    echo $outfil
+    ncks -O -d ocean_time,11568, -d station,$nsta VIP-LD.HCo10T_sta.nc $outfil
+
+done
+
